@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, SafeAreaView, Modal, Alert, ActivityIndicator } from 'react-native';
-import { Camera, Heart, MessageCircle, Send, User, Home, PlusSquare, LogOut, Upload, X } from 'lucide-react-native';
+import { View, Text, TextInput, ScrollView, Image, TouchableOpacity, Modal, Alert, ActivityIndicator } from 'react-native';
+import { Camera, Heart, MessageCircle, Send, UserIcon, HomeIcon, PlusSquareIcon, LogOut, Upload, X } from 'lucide-react-native';
 import { THEME } from '../lib/theme';
 
 
@@ -31,7 +31,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange }) => {
           onPress={() => onTabChange('home')}
           style={{ alignItems: 'center', padding: 10 }}
         >
-          <Home 
+          <HomeIcon 
             size={26} 
             color={activeTab === 'home' ? THEME.primary : THEME.textSecondary} 
           />
@@ -49,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange }) => {
           onPress={() => onTabChange('create')}
           style={{ alignItems: 'center', padding: 10 }}
         >
-          <PlusSquare 
+          <PlusSquareIcon 
             size={26} 
             color={activeTab === 'create' ? THEME.primary : THEME.textSecondary} 
           />
@@ -67,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange }) => {
           onPress={() => onTabChange('profile')}
           style={{ alignItems: 'center', padding: 10 }}
         >
-          <User 
+          <UserIcon 
             size={26} 
             color={activeTab === 'profile' ? THEME.primary : THEME.textSecondary} 
           />
