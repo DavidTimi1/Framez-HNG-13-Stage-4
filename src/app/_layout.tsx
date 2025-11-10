@@ -11,7 +11,7 @@ export type RootStackParamList = {
   MainApp: undefined;
 };
 
-const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL);
+const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL || '');
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
