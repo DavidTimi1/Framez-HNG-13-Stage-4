@@ -1,6 +1,7 @@
-import { Text, TouchableOpacity } from "react-native";
+import { Text, TouchableOpacity, Animated, View } from "react-native";
 import { THEME } from "../lib/theme";
 import { Loader2Icon } from "lucide-react-native";
+import { useInfiniteRotation } from "@/hooks/use-infinite-animation";
 
 interface ButtonProps {
     variant?: 'primary' | 'secondary' | 'outline';
@@ -19,6 +20,8 @@ export const Button: React.FC<ButtonProps> = ({
     loading = false,
     fullWidth = false
 }) => {
+    const animatedStyle = useInfiniteRotation(1000);
+
     const getButtonStyle: any = () => {
         const baseStyle = {
             paddingVertical: 14,
@@ -64,7 +67,11 @@ export const Button: React.FC<ButtonProps> = ({
             </Text>
             {
                 loading && (
-                    <Loader2Icon size={20} color={THEME.text} style={{ margin: 'auto' }} />
+                    <View style={{ position: 'absolute', width: '100%', height: '100%' }}>
+                        <Animated.View style={animatedStyle}>
+                            <Loader2Icon size={20} color={THEME.text} style={{ margin: 'auto' }} />
+                        </Animated.View>
+                    </View>
                 )
             }
         </TouchableOpacity>
