@@ -1,94 +1,48 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import bcrypt from 'bcryptjs';
 
-export const register = mutation({
+// ✅ Create User Mutation
+export const createUser = mutation({
   args: {
     email: v.string(),
     name: v.string(),
-    password: v.string(),
+    passwordHash: v.string(),
   },
   handler: async (ctx, args) => {
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(args.email)) {
-      throw new Error("Invalid email format");
-    }
-
-    // Validate name
-    if (args.name.trim().length < 2) {
-      throw new Error("Name must be at least 2 characters");
-    }
-
-    // Validate password
-    if (args.password.length < 6) {
-      throw new Error("Password must be at least 6 characters");
-    }
+    const email = args.email.toLowerCase().trim();
+    const name = args.name.trim();
 
     // Check if user already exists
     const existing = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email.toLowerCase()))
+      .withIndex("by_email", (q) => q.eq("email", email))
       .first();
 
-    if (existing) {
-      throw new Error("User with this email already exists");
-    }
+    if (existing) throw new Error("User already exists");
 
-    const passwordHash = await bcrypt.hash(args.password, 10);
-
-    // Create user
+    // Insert new user
     const userId = await ctx.db.insert("users", {
-      email: args.email.toLowerCase(),
-      name: args.name.trim(),
-      passwordHash,
+      email,
+      name,
+      passwordHash: args.passwordHash,
       createdAt: Date.now(),
     });
 
-    // Return user data (without password)
-    return {
-      userId,
-      name: args.name.trim(),
-      email: args.email.toLowerCase(),
-    };
+    return { userId, name, email };
   },
 });
 
-/**
- * Login user
- * 
- * NOTE: In production, use proper password hashing verification
- * This is a demo implementation for development purposes only.
- */
-export const login = mutation({
-  args: {
-    email: v.string(),
-    password: v.string(),
-  },
+
+// ✅ Get user by email
+export const getUserByEmail = query({
+  args: { email: v.string() },
   handler: async (ctx, args) => {
-    // Find user by email
+    const email = args.email.toLowerCase().trim();
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email.toLowerCase()))
+      .withIndex("by_email", (q) => q.eq("email", email))
       .first();
-
-    if (!user) {
-      throw new Error("Invalid email or password");
-    }
-
-    const isValid = await bcrypt.compare(args.password, user.passwordHash);
-
-    if (!isValid) {
-      throw new Error("Invalid email or password");
-    }
-
-    // Return user data (without password)
-    return {
-      userId: user._id,
-      name: user.name,
-      email: user.email,
-      avatar: user.avatar,
-    };
+    return user;
   },
 });
 

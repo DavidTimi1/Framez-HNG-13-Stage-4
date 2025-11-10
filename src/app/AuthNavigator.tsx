@@ -8,7 +8,7 @@ export type AuthStackParamList = {
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
-export const AuthNavigator: React.FC = () => {
+export default function AuthNavigator(){
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login" component={AuthScreen} />

@@ -3,7 +3,6 @@ import {
     View,
     Text,
     TextInput,
-    SafeAreaView,
     StyleSheet,
     KeyboardAvoidingView,
     Platform,
@@ -11,11 +10,12 @@ import {
     Alert,
 } from 'react-native';
 import { CameraIcon } from 'lucide-react-native';
-import { useMutation } from 'convex/react';
+import { useAction } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { Button } from '../components/Button';
 import { THEME } from '../lib/theme';
 import { useAuthStore } from '../store/authStore';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export const AuthScreen: React.FC = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -25,8 +25,8 @@ export const AuthScreen: React.FC = () => {
     const [loading, setLoading] = useState(false);
 
     const { login } = useAuthStore();
-    const loginMutation = useMutation(api.auth.login);
-    const registerMutation = useMutation(api.auth.register);
+    const loginAction = useAction(api.authActions.login);
+    const registerAction = useAction(api.authActions.register);
 
     const validateEmail = (email: string) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -54,7 +54,7 @@ export const AuthScreen: React.FC = () => {
 
         try {
             if (isLogin) {
-                const result = await loginMutation({ email, password });
+                const result = await loginAction({ email, password });
                 login({
                     _id: result.userId,
                     name: result.name,
@@ -64,7 +64,7 @@ export const AuthScreen: React.FC = () => {
                 Alert.alert('Success', 'Logged in successfully!');
 
             } else {
-                const result = await registerMutation({ email, name, password });
+                const result = await registerAction({ email, name, password });
                 login({
                     _id: result.userId,
                     name: result.name,
