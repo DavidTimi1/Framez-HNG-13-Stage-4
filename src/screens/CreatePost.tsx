@@ -59,7 +59,6 @@ export const CreatePost: React.FC = () => {
     if (!result.canceled && result.assets[0]) {
       const uri = result.assets[0].uri;
       setImageUri(uri);
-      console.log({uri})
       
       // Upload to Cloudinary
       setUploading(true);
