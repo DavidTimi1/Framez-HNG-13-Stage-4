@@ -1,15 +1,18 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
+import { PostSchema } from "./schema";
+import { api } from "./_generated/api";
+
 /**
  * Create a new post
  */
 export const createPost = mutation({
   args: {
-    userId: v.id("users"),
-    userName: v.string(),
-    content: v.string(),
-    imageUrl: v.optional(v.string()),
+    ...PostSchema,
+    likes: v.optional(v.array(v.id("users"))),
+    reposts: v.optional(v.array(v.id("users"))),
+    timestamp: v.optional(v.number())
   },
   handler: async (ctx, args) => {
     // Validate content
@@ -35,7 +38,10 @@ export const createPost = mutation({
       content: args.content.trim(),
       imageUrl: args.imageUrl,
       timestamp: Date.now(),
-      likes: [],
+      likes: args.likes || [],
+      reposts: args.reposts || [],
+      originalID: args.originalID,
+      isRepost: args.isRepost || false,
     });
 
     return postId;
@@ -92,9 +98,13 @@ export const getUserPosts = query({
  */
 export const getPost = query({
   args: { 
-    postId: v.id("posts") 
+    postId: v.optional(v.id("posts"))
   },
   handler: async (ctx, args) => {
+    if (!args.postId) {
+      return
+    }
+
     const post = await ctx.db.get(args.postId);
     return post;
   },
@@ -134,6 +144,7 @@ export const toggleLike = mutation({
     };
   },
 });
+
 
 /**
  * Delete a post (only by the post owner)
@@ -197,5 +208,75 @@ export const getUserTotalLikes = query({
     const totalLikes = posts.reduce((sum, post) => sum + (post.likes?.length || 0), 0);
 
     return totalLikes;
+  },
+});
+
+
+export const getUserRepost = mutation({
+  args: { originalId: v.id("posts"), userId: v.id("users") },
+  handler: async (ctx, { originalId, userId }) => {
+    const posts = await ctx.db
+      .query("posts")
+      .withIndex("by_originalID", (q) => q.eq("originalID", originalId))
+      .collect();
+
+    // filter by userId
+    return posts.find(post => post.userId === userId) || null;
+  },
+});
+
+
+/**
+ * Toggle like on a post
+ * If user has liked, remove like. If not liked, add like.
+ */
+export const toggleRepost = mutation({
+  args: {
+    postId: v.id("posts"),
+    userId: v.id("users"),
+    userName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const post = await ctx.db.get(args.postId);
+    
+    if (!post) {
+      throw new Error("Post not found");
+    }
+
+    const reposts = post.reposts || [];
+    const hasReposted = reposts.includes(args.userId);
+    let newReposts;
+
+    if (hasReposted){
+      const existingRepost = await ctx.runMutation( api.posts.getUserRepost , { originalId: args.postId, userId: args.userId });
+      if (existingRepost) {
+        await ctx.db.delete(existingRepost._id);
+      }
+      newReposts = reposts.filter((id) => id !== args.userId);
+
+    } else {
+      const newRepostId = await ctx.runMutation( api.posts.createPost, {
+        userId: args.userId,
+        userName: args.userName,
+        content: post.content,
+        imageUrl: post.imageUrl,
+        timestamp: Date.now(),
+        likes: [],
+        reposts: [],
+        isRepost: true,
+        originalID: args.postId,
+      });
+
+      newReposts = [...reposts, args.userId];
+    }
+
+    await ctx.db.patch(args.postId, {
+      reposts: newReposts,
+    });
+
+    return {
+      reposted: !hasReposted,
+      totalReposts: newReposts.length,
+    };
   },
 });
