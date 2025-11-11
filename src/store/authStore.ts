@@ -1,65 +1,79 @@
-import { useState, useEffect, useMemo } from "react";
-import { Platform } from "react-native";
-import { User } from "../types/app";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { User } from '../types/app';
 
-const STORAGE_KEY = "framez_user";
+interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  login: (userData: User) => Promise<void>;
+  logout: () => Promise<void>;
+  loading: boolean;
+  setLoading: (val: boolean) => void;
+}
 
-export const useAuthStore = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+const storage =
+  Platform.OS === 'web'
+    ? {
+        getItem: (name: string) => {
+          const item = localStorage.getItem(name);
+          return Promise.resolve(item ? JSON.parse(item) : null);
+        },
+        setItem: (name: string, value: any) => {
+          localStorage.setItem(name, JSON.stringify(value));
+          return Promise.resolve();
+        },
+        removeItem: (name: string) => {
+          localStorage.removeItem(name);
+          return Promise.resolve();
+        },
+      }
+    : {
+        getItem: async (name: string) => {
+          const item = await AsyncStorage.getItem(name);
+          return item ? JSON.parse(item) : null;
+        },
+        setItem: async (name: string, value: any) => {
+          await AsyncStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: async (name: string) => {
+          await AsyncStorage.removeItem(name);
+        },
+      };
 
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        if (Platform.OS === "web") {
-          const stored = localStorage.getItem(STORAGE_KEY);
-          if (stored) setUser(JSON.parse(stored));
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      loading: true,
+      isAuthenticated: false,
+
+      setLoading: (val) => set({ loading: val }),
+
+      login: async (userData: User) => {
+        set({ user: userData, isAuthenticated: true });
+      },
+
+      logout: async () => {
+        set({ user: null, isAuthenticated: false });
+      },
+    }),
+    {
+      name: 'framez_user',
+      storage: storage,
+      onRehydrateStorage: () => (state) => {
+        // when rehydrated
+        if (!state) return;
+
+        if (state?.user) {
+          state.isAuthenticated = true;
+          state.loading = false;
         } else {
-          const stored = await AsyncStorage.getItem(STORAGE_KEY);
-          if (stored) setUser(JSON.parse(stored));
+          state.loading = false;
         }
-      } catch (err) {
-        console.error("Error loading user", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUser();
-  }, []);
-
-  const login = async (userData: User) => {
-    setUser(userData);
-    try {
-      if (Platform.OS === "web") {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
-
-      } else {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
-      }
-
-    } catch (err) {
-      console.error("Error saving user", err);
+      },
     }
-  };
-
-  const logout = async () => {
-    setUser(null);
-
-    try {
-      if (Platform.OS === "web") {
-        localStorage.removeItem(STORAGE_KEY);
-      } else {
-        await AsyncStorage.removeItem(STORAGE_KEY);
-      }
-
-    } catch (err) {
-      console.error("Error removing user", err);
-    }
-  };
-  
-  const isAuthenticated = useMemo(() => !!user, [user]);
-
-  return { user, isAuthenticated, login, logout, loading };
-};
+  )
+);

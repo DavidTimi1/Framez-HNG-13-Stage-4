@@ -14,7 +14,8 @@ export interface Post {
     imageUrl?: string;
     timestamp: number;
     likes: string[];
-    comments: number;
+    reposts: string[];
+    originalID?: string;
 }
 
 
