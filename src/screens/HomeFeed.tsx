@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Animated,
   View,
   Text,
   StyleSheet,
@@ -14,6 +15,8 @@ import { PostCard } from '../components/PostCard';
 import { THEME } from '../lib/theme';
 import { useAuthStore } from '../store/authStore';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useScreenTransition } from '@/hooks/use-screen-transitions';
+import { SkeletonPost } from '@/components/PostsLoader';
 
 export const HomeFeed: React.FC = () => {
   const { user } = useAuthStore();
@@ -22,10 +25,12 @@ export const HomeFeed: React.FC = () => {
   // Fetch all posts with optional limit for pagination
   const posts = useQuery(api.posts.getAllPosts, { limit: 50 });
   const toggleLikeMutation = useMutation(api.posts.toggleLike);
+  const toggleRepostMutation = useMutation(api.posts.toggleRepost);
+  const { animatedStyle } = useScreenTransition('left');
 
   const handleLike = async (postId: string) => {
     if (!user) return;
-    
+
     try {
       await toggleLikeMutation({
         postId: postId as any,
@@ -36,9 +41,22 @@ export const HomeFeed: React.FC = () => {
     }
   };
 
+  const handleRepost = async (postId: string) => {
+    if (!user) return;
+
+    try {
+      await toggleRepostMutation({
+        postId: postId as any,
+        userId: user._id as any,
+        userName: user.name as any,
+      });
+    } catch (error) {
+      console.error('Failed to toggle repost:', error);
+    }
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
-    // Convex automatically refreshes data
     setTimeout(() => setRefreshing(false), 1000);
   };
 
@@ -46,6 +64,7 @@ export const HomeFeed: React.FC = () => {
     <PostCard
       post={item}
       onLike={handleLike}
+      onRepost={handleRepost}
       currentUserId={user?._id || ''}
     />
   );
@@ -69,41 +88,44 @@ export const HomeFeed: React.FC = () => {
   if (posts === undefined) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Framez</Text>
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={THEME.primary} />
-        </View>
+        <Animated.View style={animatedStyle}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Framez</Text>
+          </View>
+          <SkeletonPost />
+        </Animated.View>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* App Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Framez</Text>
-      </View>
 
-      {/* Posts Feed */}
-      <FlatList
-        data={posts}
-        renderItem={renderPost}
-        keyExtractor={(item) => item._id}
-        ListHeaderComponent={renderHeader}
-        ListEmptyComponent={renderEmpty}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={THEME.primary}
-            colors={[THEME.primary]}
-          />
-        }
-        showsVerticalScrollIndicator={false}
-      />
+      <Animated.View style={animatedStyle}>
+        {/* App Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Framez</Text>
+        </View>
+
+        {/* Posts Feed */}
+        <FlatList
+          data={posts}
+          renderItem={renderPost}
+          keyExtractor={(item) => item._id}
+          ListHeaderComponent={renderHeader}
+          ListEmptyComponent={renderEmpty}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={THEME.primary}
+              colors={[THEME.primary]}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+        />
+      </Animated.View>
     </SafeAreaView>
   );
 };

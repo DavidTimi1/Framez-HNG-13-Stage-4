@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Animated,
   View,
   Text,
   TextInput,
@@ -22,6 +23,8 @@ import { uploadToCloudinary } from '../lib/cloudinary';
 import { useAuthStore } from '../store/authStore';
 import { TabParamList } from '../app/TabNavigator';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Dimensions } from 'react-native';
+import { useScreenTransition } from '@/hooks/use-screen-transitions';
 
 type CreatePostNavigationProp = BottomTabNavigationProp<TabParamList, 'CreateTab'>;
 
@@ -35,11 +38,12 @@ export const CreatePost: React.FC = () => {
   const [creating, setCreating] = useState(false);
 
   const createPostMutation = useMutation(api.posts.createPost);
+  const { animatedStyle } = useScreenTransition();
 
   const pickImage = async () => {
     // Request permission
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
+
     if (status !== 'granted') {
       Alert.alert(
         'Permission Required',
@@ -59,7 +63,7 @@ export const CreatePost: React.FC = () => {
     if (!result.canceled && result.assets[0]) {
       const uri = result.assets[0].uri;
       setImageUri(uri);
-      
+
       // Upload to Cloudinary
       setUploading(true);
       try {
@@ -107,10 +111,10 @@ export const CreatePost: React.FC = () => {
       setImageUrl(null);
 
       Alert.alert('Success', 'Post created successfully!');
-      
+
       // Navigate to Home tab
       navigation.navigate('HomeTab');
-      
+
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to create post');
     } finally {
@@ -120,86 +124,80 @@ export const CreatePost: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Create Post</Text>
-      </View>
-
-      <ScrollView
-        style={styles.content}
+      <Animated.ScrollView
+        style={[styles.content, animatedStyle]}
         contentContainerStyle={styles.contentContainer}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* Text Input */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Create a New Post</Text>
+        </View>
+        {/* Image Upload / Preview */}
+        <TouchableOpacity
+          onPress={pickImage}
+          activeOpacity={0.8}
+          disabled={uploading}
+          style={imageUri ? styles.imageContainer : styles.imagePlaceholder}
+        >
+          {imageUri ? (
+            <>
+              <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+              {uploading && (
+                <View style={styles.uploadingOverlay}>
+                  <ActivityIndicator size="large" color={THEME.primary} />
+                  <Text style={styles.uploadingText}>Uploading...</Text>
+                </View>
+              )}
+              <TouchableOpacity
+                onPress={removeImage}
+                style={styles.removeButton}
+                disabled={uploading}
+              >
+                <X size={20} color="#fff" />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <View style={styles.uploadPlaceholderContent}>
+              <Upload size={40} color={THEME.textSecondary} />
+              <Text style={styles.uploadPlaceholderText}>Tap to add a photo</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* Caption / Text Input */}
         <TextInput
-          placeholder="What's on your mind?"
+          placeholder="Add a caption..."
           placeholderTextColor={THEME.textSecondary}
           value={content}
           onChangeText={setContent}
           multiline
-          numberOfLines={6}
           maxLength={500}
-          style={styles.textInput}
+          style={[styles.textInput, imageUri ? styles.captionInput : {}]}
         />
+        <Text style={styles.characterCount}>{content.length}/500</Text>
 
-        <Text style={styles.characterCount}>
-          {content.length}/500
-        </Text>
-
-        {/* Image Preview or Upload Button */}
-        {imageUri ? (
-          <View style={styles.imageContainer}>
-            <Image
-              source={{ uri: imageUri }}
-              style={styles.imagePreview}
-              resizeMode="cover"
-            />
-            {uploading && (
-              <View style={styles.uploadingOverlay}>
-                <ActivityIndicator size="large" color={THEME.primary} />
-                <Text style={styles.uploadingText}>Uploading...</Text>
-              </View>
-            )}
-            <TouchableOpacity
-              onPress={removeImage}
-              style={styles.removeButton}
-              disabled={uploading}
-            >
-              <X size={20} color={THEME.text} />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <Button
-            variant="outline"
-            onPress={pickImage}
-            disabled={uploading}
-            fullWidth
-          >
-            <View style={styles.uploadButtonContent}>
-              <Upload size={20} color={THEME.text} />
-              <Text style={styles.uploadButtonText}>Add Photo</Text>
-            </View>
-          </Button>
-        )}
-
-        {/* Create Button */}
+        {/* Share Button */}
         <Button
           variant="primary"
           onPress={handleCreatePost}
-          disabled={creating || uploading || !content.trim()}
+          disabled={creating || uploading || (!content.trim() && !imageUri)}
           loading={creating}
           fullWidth
         >
           Share Post
         </Button>
 
-        {/* Info Text */}
         <Text style={styles.infoText}>
           Your post will be visible to all Framez users
         </Text>
-      </ScrollView>
+      </Animated.ScrollView>
     </SafeAreaView>
+
   );
 };
+
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -228,55 +226,16 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingBottom: 120, // Space for tab bar
   },
-  textInput: {
-    backgroundColor: THEME.surface,
-    color: THEME.text,
-    padding: 16,
-    borderRadius: 12,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: THEME.border,
-    minHeight: 150,
-    textAlignVertical: 'top',
-  },
   characterCount: {
     color: THEME.textSecondary,
     fontSize: 12,
     textAlign: 'right',
     marginTop: -8,
   },
-  imageContainer: {
-    position: 'relative',
-  },
-  imagePreview: {
-    width: '100%',
-    height: 400,
-    borderRadius: 24,
-    backgroundColor: THEME.surfaceLight,
-  },
-  uploadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   uploadingText: {
     color: THEME.text,
     fontSize: 16,
     marginTop: 12,
-  },
-  removeButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: 20,
-    padding: 8,
   },
   uploadButtonContent: {
     flexDirection: 'row',
@@ -292,4 +251,74 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
   },
+  imagePlaceholder: {
+    width: '100%',
+    height: SCREEN_HEIGHT * 0.5,
+    borderRadius: 24,
+    backgroundColor: THEME.surfaceLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: THEME.border,
+  },
+
+  uploadPlaceholderContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+
+  uploadPlaceholderText: {
+    color: THEME.textSecondary,
+    fontSize: 16,
+  },
+
+  textInput: {
+    backgroundColor: THEME.surface,
+    color: THEME.text,
+    padding: 16,
+    borderRadius: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+
+  captionInput: {
+    marginTop: 12,
+    minHeight: 60,
+  },
+
+  imageContainer: {
+    position: 'relative',
+    width: '100%',
+    height: SCREEN_HEIGHT * 0.6,
+    borderRadius: 24,
+    marginBottom: 10,
+    overflow: 'hidden',
+  },
+
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+  },
+
+  uploadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  removeButton: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 20,
+    padding: 8,
+  },
+
 });
