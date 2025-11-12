@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Skeleton } from './Skeleton';
 import { SkeletonPost } from './PostsLoader';
 import { THEME } from '@/lib/theme';
@@ -15,56 +14,33 @@ export const ProfileLoader = () => {
     const { animatedStyle } = useScreenTransition('right');
 
     return (
-        <SafeAreaView style={styles.container}>
-            <Animated.View style={animatedStyle}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Profile</Text>
-                </View>
-
-                <View>
-                    <View style={styles.profileCard}>
-                        <View style={styles.profileHeader}>
-                            <Skeleton style={styles.avatar} />
-                            <Skeleton style={styles.name} />
-                            <Skeleton style={styles.email} />
-                        </View>
-
-                        {/* Stats */}
-                        <View style={styles.statsContainer}>
-                            <Skeleton style={styles.stat} />
-                            <View style={styles.statDivider} />
-                            <Skeleton style={styles.stat} />
-                        </View>
+        <Animated.View style={animatedStyle}>
+            <View>
+                <View style={styles.profileCard}>
+                    <View style={styles.profileHeader}>
+                        <Skeleton style={styles.avatar} />
+                        <Skeleton style={styles.name} />
+                        <Skeleton style={styles.email} />
                     </View>
 
-                    {/* "Your Posts" Header */}
-                    <Text style={styles.postsHeaderText}>Your Posts</Text>
+                    {/* Stats */}
+                    <View style={styles.statsContainer}>
+                        <Skeleton style={styles.stat} />
+                        <View style={styles.statDivider} />
+                        <Skeleton style={styles.stat} />
+                    </View>
                 </View>
 
-                <SkeletonPost />
-            </Animated.View>
-        </SafeAreaView>
+                {/* "Your Posts" Header */}
+                <Text style={styles.postsHeaderText}>Your Posts</Text>
+            </View>
+
+            <SkeletonPost />
+        </Animated.View>
     )
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: THEME.background },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        borderBottomWidth: 1,
-        borderBottomColor: THEME.surfaceLight,
-        backgroundColor: THEME.background,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    headerTitle: { color: THEME.text, fontSize: 24, fontWeight: '700' },
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     profileCard: {
         margin: 16,
@@ -100,7 +76,7 @@ const styles = StyleSheet.create({
     statDivider: { width: 1, backgroundColor: THEME.border },
     postsHeaderText: {
         height: 14,
-        backgroundColor: THEME.textSecondary,
+        color: THEME.textSecondary,
         marginLeft: 16,
         marginBottom: 8
     },

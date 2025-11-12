@@ -1,11 +1,10 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Dimensions, Animated } from 'react-native';
+import React  from 'react';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { THEME } from '../lib/theme';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Skeleton } from './Skeleton';
 
 
-const { width, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export const SkeletonPost: React.FC = () => {
   const renderShimmerCard = (key: number) => (
