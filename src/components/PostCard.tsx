@@ -30,10 +30,11 @@ export const PostCard: React.FC<PostCardProps> = ({
   const isARepost = !!post.originalID;
   const currentPost = useDisplayPost(post);
   const navigation = useNavigation<PostNavigationProp>();
+  const currentUserName = useAuthStore()?.user?.name || '';
 
   const hasLiked = currentPost.likes.includes(currentUserId);
   const hasReposted = currentPost.reposts?.includes(currentUserId);
-  const userName = currentPost.userName === useAuthStore()?.user?.name ? 'You' : currentPost.userName;
+  const getDisplayName = (name: string) => name === currentUserName ? 'You' : name;
   const noImage = !currentPost.imageUrl;
 
   const [isLiking, setIsLiking] = useState(false);
@@ -109,10 +110,10 @@ export const PostCard: React.FC<PostCardProps> = ({
           <View>
             {isARepost && (
               <Text style={{ color: THEME.textSecondary, fontSize: 12 }}>
-                {userName} reposted
+                { getDisplayName(post.userName) } reposted
               </Text>
             )}
-            <Text style={styles.userName}> {userName} </Text>
+            <Text style={styles.userName}> {getDisplayName(currentPost.userName)} </Text>
           </View>
 
           <Text style={styles.timestamp}>

@@ -14,15 +14,14 @@ export const UserProfileModal = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
           <BackIcon size={24} color={THEME.primary} />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}> {userName}'s Profile</Text>
+        <Text style={styles.headerTitle}> {userName}'s Profile </Text>
         
-        <View style={{ width: 24 }} /> {/* spacer for symmetry */}
+        <View style={{ width: 24 }} />
       </View>
 
       <ProfileContent userId={userId} />
