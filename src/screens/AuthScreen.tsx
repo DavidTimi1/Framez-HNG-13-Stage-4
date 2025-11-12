@@ -1,23 +1,25 @@
+import { useScreenTransition } from '@/hooks/use-screen-transitions';
+import { cleanConvexError } from '@/lib/convex-error';
+import { useAction } from 'convex/react';
+import { EyeIcon, EyeOffIcon } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
     Animated,
-    View,
-    Text,
-    TextInput,
-    StyleSheet,
     KeyboardAvoidingView,
     Platform,
+    StyleSheet,
+    Text,
+    TextInput,
     TouchableOpacity,
-    Alert,
+    View,
+    Image
 } from 'react-native';
-import { CameraIcon, EyeIcon, EyeOffIcon } from 'lucide-react-native';
-import { useAction } from 'convex/react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { toast } from 'sonner-native';
 import { api } from '../../convex/_generated/api';
 import { Button } from '../components/Button';
 import { THEME } from '../lib/theme';
 import { useAuthStore } from '../store/authStore';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useScreenTransition } from '@/hooks/use-screen-transitions';
 
 export const AuthScreen: React.FC = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -26,7 +28,7 @@ export const AuthScreen: React.FC = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [ error, setError ] = useState('');
+    const [error, setError] = useState('');
 
     const { login } = useAuthStore();
     const loginAction = useAction(api.authActions.login);
@@ -46,7 +48,11 @@ export const AuthScreen: React.FC = () => {
             >
                 {/* Logo and Title */}
                 <Animated.View style={[styles.header, animatedStyle]}>
-                    <CameraIcon size={64} color={THEME.primary} />
+                    <Image
+                        source={require('../assets/images/logo.png')}
+                        style={styles.logo}
+                        resizeMode="contain"
+                    />
                     <Text style={styles.title}>Framez</Text>
                     <Text style={styles.subtitle}>Share your moments</Text>
                 </Animated.View>
@@ -137,7 +143,7 @@ export const AuthScreen: React.FC = () => {
         </SafeAreaView >
     );
 
-    async function handleAuth(){
+    async function handleAuth() {
         // Clear any previous error
         setError('');
 
@@ -151,7 +157,7 @@ export const AuthScreen: React.FC = () => {
             return;
         }
 
-        if (password.length < 6) {
+        if (password.length < 6 && !isLogin) {
             setError('Password must be at least 6 characters');
             return;
         }
@@ -167,7 +173,7 @@ export const AuthScreen: React.FC = () => {
                     email: result.email,
                     avatar: result.avatar,
                 });
-                Alert.alert('Success', 'Logged in successfully!');
+                toast.success('Logged in successfully!');
             } else {
                 const result = await registerAction({ email, name, password });
                 login({
@@ -175,11 +181,11 @@ export const AuthScreen: React.FC = () => {
                     name: result.name,
                     email: result.email,
                 });
-                Alert.alert('Success', 'Account created successfully!');
+                toast.success('Account created successfully!');
             }
         } catch (err: any) {
-            setError(err.message || 'Something went wrong. Please try again.');
-            
+            setError(cleanConvexError(err));
+
         } finally {
             setLoading(false);
         }
@@ -190,6 +196,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: THEME.background,
+        fontFamily: 'Poppins-Regular',
     },
     keyboardView: {
         flex: 1,
@@ -200,10 +207,15 @@ const styles = StyleSheet.create({
         marginBottom: 48,
         alignItems: 'center',
     },
+    logo: {
+        width: 100,   // slightly bigger than the old 64 icon
+        height: 100,
+    },
+
     title: {
         color: THEME.text,
         fontSize: 36,
-        fontWeight: '700',
+        fontFamily: 'Calligraffitti_Regular',
         marginTop: 16,
     },
     subtitle: {

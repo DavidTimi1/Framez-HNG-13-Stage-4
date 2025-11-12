@@ -25,6 +25,8 @@ import { TabParamList } from '../app/TabNavigator';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Dimensions } from 'react-native';
 import { useScreenTransition } from '@/hooks/use-screen-transitions';
+import { toast } from 'sonner-native';
+import { cleanConvexError } from '@/lib/convex-error';
 
 type CreatePostNavigationProp = BottomTabNavigationProp<TabParamList, 'CreateTab'>;
 
@@ -45,8 +47,7 @@ export const CreatePost: React.FC = () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (status !== 'granted') {
-      Alert.alert(
-        'Permission Required',
+      toast.error(
         'Please grant camera roll permissions to upload images.'
       );
       return;
@@ -69,10 +70,12 @@ export const CreatePost: React.FC = () => {
       try {
         const url = await uploadToCloudinary(uri);
         setImageUrl(url);
-        Alert.alert('Success', 'Image uploaded successfully!');
+        toast.success('Image uploaded successfully!');
+
       } catch (error) {
-        Alert.alert('Error', 'Failed to upload image. Please try again.');
+        toast.error('Failed to upload image. Please try again.');
         setImageUri(null);
+
       } finally {
         setUploading(false);
       }
@@ -85,13 +88,13 @@ export const CreatePost: React.FC = () => {
   };
 
   const handleCreatePost = async () => {
-    if (!content.trim()) {
-      Alert.alert('Error', 'Please add some content to your post');
+    if (!content.trim() && !imageUri) {
+      toast.error('Please add some content to your post');
       return;
     }
 
     if (!user) {
-      Alert.alert('Error', 'You must be logged in to create a post');
+      toast.error('You must be logged in to create a post');
       return;
     }
 
@@ -110,13 +113,14 @@ export const CreatePost: React.FC = () => {
       setImageUri(null);
       setImageUrl(null);
 
-      Alert.alert('Success', 'Post created successfully!');
+      toast.success('Post created successfully!');
 
-      // Navigate to Home tab
-      navigation.navigate('HomeTab');
+      // Navigate to Home tab// In CreatePost.tsx
+      navigation.navigate('HomeTab', { scrollToTop: true });
 
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to create post');
+      toast.error(cleanConvexError(error) || 'Failed to create post');
+
     } finally {
       setCreating(false);
     }
@@ -142,6 +146,7 @@ export const CreatePost: React.FC = () => {
           {imageUri ? (
             <>
               <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+
               {uploading && (
                 <View style={styles.uploadingOverlay}>
                   <ActivityIndicator size="large" color={THEME.primary} />
@@ -208,7 +213,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: THEME.border,
@@ -216,7 +220,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: THEME.text,
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: 'PoppinsBold',
   },
   content: {
     flex: 1,
@@ -254,6 +258,7 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     width: '100%',
     height: SCREEN_HEIGHT * 0.5,
+    position: "relative",
     borderRadius: 24,
     backgroundColor: THEME.surfaceLight,
     justifyContent: 'center',
@@ -262,7 +267,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: THEME.border,
   },
-
   uploadPlaceholderContent: {
     justifyContent: 'center',
     alignItems: 'center',
@@ -294,15 +298,19 @@ const styles = StyleSheet.create({
   imageContainer: {
     position: 'relative',
     width: '100%',
-    height: SCREEN_HEIGHT * 0.6,
+    height: SCREEN_HEIGHT * 0.5,
     borderRadius: 24,
     marginBottom: 10,
     overflow: 'hidden',
+    borderWidth: 0,
+    borderColor: THEME.border,
   },
 
   imagePreview: {
     width: '100%',
     height: '100%',
+    backgroundColor: THEME.surfaceLight,
+    resizeMode: 'cover',
   },
 
   uploadingOverlay: {
