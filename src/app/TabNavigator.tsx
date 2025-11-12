@@ -13,9 +13,10 @@ import { THEME } from '../lib/theme';
 const { width } = Dimensions.get('window');
 
 export type TabParamList = {
-  HomeTab: undefined;
+  HomeTab: { scrollToTop?: boolean } | undefined;
   CreateTab: undefined;
   ProfileTab: undefined;
+  // UserProfileModal: { userName: string; userId: string };
 };
 
 const Tab = createBottomTabNavigator<TabParamList>();
@@ -57,7 +58,7 @@ interface CustomTabBarProps {
   navigation: any;
 }
 
-// 🔹 Custom Tab Bar
+// Custom Tab Bar
 const CustomTabBar: React.FC<CustomTabBarProps> = ({ state, descriptors, navigation }) => {
   return (
     <View style={styles.navContainer}>
@@ -123,6 +124,8 @@ const styles = StyleSheet.create({
     bottom: Platform.OS === 'ios' ? 30 : 20,
     left: '50%',
     borderRadius: NAV_RADIUS,
+    borderWidth: 1,
+    borderColor: THEME.surfaceLight,
     overflow: 'hidden',
     backgroundColor: 'rgba(30, 30, 30, 0.5)',
     elevation: 8,

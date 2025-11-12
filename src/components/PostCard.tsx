@@ -6,6 +6,10 @@ import { THEME } from '../lib/theme';
 import { useAuthStore } from '@/store/authStore';
 import { useDisplayPost } from '@/hooks/use-display-post';
 import { Dimensions } from 'react-native';
+import { toast } from 'sonner-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@/app/AppNavigator';
 
 interface PostCardProps {
   post: Post;
@@ -14,6 +18,7 @@ interface PostCardProps {
   currentUserId: string;
 }
 
+type PostNavigationProp = NativeStackNavigationProp< RootStackParamList, 'UserProfileModal'>;
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export const PostCard: React.FC<PostCardProps> = ({
@@ -24,6 +29,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 }) => {
   const isARepost = !!post.originalID;
   const currentPost = useDisplayPost(post);
+  const navigation = useNavigation<PostNavigationProp>();
 
   const hasLiked = currentPost.likes.includes(currentUserId);
   const hasReposted = currentPost.reposts?.includes(currentUserId);
@@ -39,7 +45,6 @@ export const PostCard: React.FC<PostCardProps> = ({
     await onLike(currentPost._id);
     setIsLiking(false);
   };
-
 
   const handleRepost = async () => {
     if (isReposting) return;
@@ -58,8 +63,9 @@ export const PostCard: React.FC<PostCardProps> = ({
         title: `${currentPost.userName}'s post on Framez`,
         url: currentPost.imageUrl || undefined,
       });
+
     } catch (error: any) {
-      Alert.alert('Error', 'Unable to share this post right now.');
+      toast.error('Unable to share this post right now.');
     }
   };
 
@@ -92,7 +98,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   return (
     <View style={styles.container}>
       {/* Post Header */}
-      <View style={styles.header}>
+      <TouchableOpacity onPress={goToUserProfile} activeOpacity={0.7} style={styles.header}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
             {currentPost.userName.charAt(0).toUpperCase()}
@@ -103,7 +109,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           <View>
             {isARepost && (
               <Text style={{ color: THEME.textSecondary, fontSize: 12 }}>
-                {userName} Reposted
+                {userName} reposted
               </Text>
             )}
             <Text style={styles.userName}> {userName} </Text>
@@ -113,7 +119,7 @@ export const PostCard: React.FC<PostCardProps> = ({
             {formatTimestamp(currentPost.timestamp)}
           </Text>
         </View>
-      </View>
+      </TouchableOpacity>
 
       <PostContent currentPost={currentPost} />
 
@@ -158,10 +164,9 @@ export const PostCard: React.FC<PostCardProps> = ({
 
       {/* Post Content */}
       {
-        !noImage && (
+        !noImage && !!currentPost?.content && (
           <View style={styles.content}>
             <Text style={styles.contentText}>
-              <Text style={styles.contentUserName}>{currentPost.userName}</Text>{' '}
               {currentPost.content}
             </Text>
           </View>
@@ -169,6 +174,13 @@ export const PostCard: React.FC<PostCardProps> = ({
       }
     </View>
   );
+
+  function goToUserProfile(){
+    navigation.navigate('UserProfileModal', {
+      userId: currentPost.userId,
+      userName: currentPost.userName,
+    });
+  };
 };
 
 const PostContent = ({ currentPost }: {currentPost: Post}) => {
@@ -190,14 +202,14 @@ const PostContent = ({ currentPost }: {currentPost: Post}) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 24,
+    marginBottom: 16,
     paddingHorizontal: 20,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     // paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   avatar: {
     width: 36,
@@ -210,8 +222,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     color: THEME.text,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
   },
   userInfo: {
     flex: 1,
@@ -222,7 +233,6 @@ const styles = StyleSheet.create({
   userName: {
     color: THEME.text,
     fontSize: 15,
-    fontWeight: '600',
   },
   timestamp: {
     color: THEME.textSecondary,
@@ -230,10 +240,10 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: '100%',
-    height: SCREEN_HEIGHT * 0.6, // Max 60% of typical device height
+    height: SCREEN_HEIGHT * 0.55, // Max 60% of typical device height
     borderRadius: 24,
     backgroundColor: THEME.surfaceLight,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   actions: {
     flexDirection: 'row',
@@ -259,11 +269,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   contentUserName: {
-    fontWeight: '600',
   },
   textOnlyWrapper: {
     width: '100%',
-    height: SCREEN_HEIGHT * 0.65, // same height as images
+    height: SCREEN_HEIGHT * 0.5, // same height as images
     borderRadius: 24,
     backgroundColor: THEME.surfaceLight,
     justifyContent: 'center',
@@ -275,7 +284,6 @@ const styles = StyleSheet.create({
   textOnlyContent: {
     color: THEME.text,
     fontSize: 24, // larger font for emphasis
-    fontWeight: '600',
     textAlign: 'center',
     lineHeight: 28,
   },
