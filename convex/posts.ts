@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 
 import { PostSchema } from "./schema";
 import { api } from "./_generated/api";
+import { ExpressionOrValue } from "convex/server";
 
 /**
  * Create a new post
@@ -15,11 +16,6 @@ export const createPost = mutation({
     timestamp: v.optional(v.number())
   },
   handler: async (ctx, args) => {
-    // Validate content
-    if (args.content.trim().length === 0) {
-      throw new Error("Post content cannot be empty");
-    }
-
     if (args.content.length > 500) {
       throw new Error("Post content cannot exceed 500 characters");
     }
@@ -79,8 +75,8 @@ export const getAllPosts = query({
  * Get posts by a specific user
  */
 export const getUserPosts = query({
-  args: { 
-    userId: v.id("users") 
+  args: {
+    userId: v.id("users")
   },
   handler: async (ctx, args) => {
     const posts = await ctx.db
@@ -97,7 +93,7 @@ export const getUserPosts = query({
  * Get a single post by ID
  */
 export const getPost = query({
-  args: { 
+  args: {
     postId: v.optional(v.id("posts"))
   },
   handler: async (ctx, args) => {
@@ -121,7 +117,7 @@ export const toggleLike = mutation({
   },
   handler: async (ctx, args) => {
     const post = await ctx.db.get(args.postId);
-    
+
     if (!post) {
       throw new Error("Post not found");
     }
@@ -156,7 +152,7 @@ export const deletePost = mutation({
   },
   handler: async (ctx, args) => {
     const post = await ctx.db.get(args.postId);
-    
+
     if (!post) {
       throw new Error("Post not found");
     }
@@ -179,8 +175,8 @@ export const deletePost = mutation({
  * Get posts count for a user
  */
 export const getUserPostsCount = query({
-  args: { 
-    userId: v.id("users") 
+  args: {
+    userId: v.id("users")
   },
   handler: async (ctx, args) => {
     const posts = await ctx.db
@@ -196,8 +192,8 @@ export const getUserPostsCount = query({
  * Get total likes received by a user across all their posts
  */
 export const getUserTotalLikes = query({
-  args: { 
-    userId: v.id("users") 
+  args: {
+    userId: v.id("users")
   },
   handler: async (ctx, args) => {
     const posts = await ctx.db
@@ -238,7 +234,7 @@ export const toggleRepost = mutation({
   },
   handler: async (ctx, args) => {
     const post = await ctx.db.get(args.postId);
-    
+
     if (!post) {
       throw new Error("Post not found");
     }
@@ -247,15 +243,15 @@ export const toggleRepost = mutation({
     const hasReposted = reposts.includes(args.userId);
     let newReposts;
 
-    if (hasReposted){
-      const existingRepost = await ctx.runMutation( api.posts.getUserRepost , { originalId: args.postId, userId: args.userId });
+    if (hasReposted) {
+      const existingRepost = await ctx.runMutation(api.posts.getUserRepost, { originalId: args.postId, userId: args.userId });
       if (existingRepost) {
         await ctx.db.delete(existingRepost._id);
       }
       newReposts = reposts.filter((id) => id !== args.userId);
 
     } else {
-      const newRepostId = await ctx.runMutation( api.posts.createPost, {
+      const newRepostId = await ctx.runMutation(api.posts.createPost, {
         userId: args.userId,
         userName: args.userName,
         content: post.content,
@@ -278,5 +274,61 @@ export const toggleRepost = mutation({
       reposted: !hasReposted,
       totalReposts: newReposts.length,
     };
+  },
+});
+
+
+/**
+ * Get posts with pagination support
+ */
+export const getPostsPaginated = query({
+  args: {
+    limit: v.optional(v.number()),   // how many to fetch
+    before: v.optional(v.number()),  // timestamp before which to fetch (older)
+    after: v.optional(v.number()),   // timestamp after which to fetch (newer)
+  },
+  handler: async (ctx, { limit = 50, before, after }) => {
+    let postsQuery = ctx.db.query('posts').withIndex('by_timestamp');
+    
+    // convrt both to unknown types
+    const beforeTime = before as unknown
+    const afterTime = after as unknown
+
+    // Apply filters if provided
+    if (before !== undefined) {
+      postsQuery = postsQuery.filter(q => q.lt('timestamp', beforeTime as ExpressionOrValue<"timestamp">));
+    }
+    if (after !== undefined) {
+      postsQuery = postsQuery.filter(q => q.gt('timestamp', afterTime as ExpressionOrValue<"timestamp">));
+    }
+
+    // Apply ordering and limit
+    const orderedQuery = postsQuery.order("desc");
+    if (limit !== undefined) {
+      return await orderedQuery.take(limit);
+    }
+
+    return await orderedQuery.collect();
+  },
+});
+
+
+
+
+export const hasNewPostsSince = query({
+  args: {
+    timestamp: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    if (!args.timestamp) {
+      return 0;
+    }
+
+    const newPosts = await ctx.db
+      .query("posts")
+      .withIndex("by_timestamp", (q) => q.gt("timestamp", args.timestamp!))
+      .collect();
+
+    return newPosts.length;
   },
 });
