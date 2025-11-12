@@ -11,14 +11,18 @@ HNG Internship Frontend Track Stage 4 Task
 
 ## ✨ Features
 
-- ✅ **Authentication**: Secure sign-up, login, and logout with persistent sessions
-- ✅ **Post Creation**: Share posts with text and images (uploaded to Cloudinary)
+- ✅ **Authentication**: Secure sign-up, login, and logout with persistent sessions using Convex Auth for secret authentication
+- ✅ **Post Creation**: Share posts with text and images (uploaded to Cloudinary using image presets)
 - ✅ **Feed**: View all posts in chronological order with pull-to-refresh
-- ✅ **Profile**: View user profile with personal posts and statistics
+- ✅ **Reposts**: Intelligently handles reposts by storing the original post and displaying it while noting who performed the repost
+- ✅ **Profile**: View user profiles through the 3-tab navigation (Home Feed, Create Post, and User Profile)
+- ✅ **Poster Profile Access**: Easily view a poster's profile by clicking the post header, including all their posts, which can be liked or reposted
 - ✅ **React Navigation**: Professional navigation with stack and tab navigators
-- ✅ **Modern UI**: Dark theme, frosted glass effects, rounded images
+- ✅ **Modern UI**: Frosted glass effects for the navigation menu, giving a sleek, modern feel
+- ✅ **Seamless Animations**: Smooth transitions between pages for a polished user experience
+- ✅ **Custom Fonts and Icons**: Tailored typography and icons for a unique design
 - ✅ **Real-time Updates**: Powered by Convex for instant data synchronization
-- ✅ **Session Persistence**: Stay logged in across app restarts
+- ✅ **Session Persistence**: Zustands ensures user state is retained across app restarts
 
 ## 🛠️ Tech Stack
 
@@ -86,6 +90,8 @@ This will:
 2. Go to **Settings** → **Upload** → **Add upload preset**
 3. Set preset mode to **"unsigned"**
 4. Note your **Cloud Name** and **Preset Name**
+
+Cloudinary is used to upload images, and the resulting URLs are stored as the post image references.
 
 ### 5️⃣ Setup Environment Variables
 
@@ -187,13 +193,13 @@ Root Navigator (Stack)
 
 **Reusable Components:**
 - `Button.tsx` - 3 variants (primary, secondary, outline) with loading states
-- `PostCard.tsx` - Instagram-style post display with like/comment actions
+- `PostCard.tsx` - Instagram-style post display with like/comment/repost actions
 
 **Screens:**
 - `AuthScreen.tsx` - Login/Register with validation
-- `HomeFeed.tsx` - Real-time feed with pull-to-refresh
+- `HomeFeed.tsx` - Real-time feed with pull-to-refresh and seamless animations
 - `CreatePost.tsx` - Post creation with image upload
-- `ProfileScreen.tsx` - User profile with stats and posts
+- `ProfileScreen.tsx` - User profile with stats, posts, and repost functionality
 
 ### State Management
 
@@ -208,7 +214,7 @@ Root Navigator (Stack)
 }
 ```
 
-Persisted to AsyncStorage for session persistence.
+Persisted to AsyncStorage for session persistence, ensuring the user remains logged in across app restarts.
 
 ### Theme System
 
@@ -246,6 +252,7 @@ THEME = {
 - Pull-to-refresh on feeds
 - Loading states for all async operations
 - Form validation with helpful error messages
+- **Custom fonts and icons** for a unique and modern design
 
 ## 🔧 Convex Backend
 
@@ -286,6 +293,7 @@ THEME = {
 - `posts.getAllPosts(limit)` - Get all posts (paginated)
 - `posts.getUserPosts(userId)` - Get user's posts
 - `posts.toggleLike(postId, userId)` - Like/unlike post
+- `posts.repost(postId, userId)` - Repost an existing post, storing the original post and noting the reposting user
 
 ### Extending the API
 
