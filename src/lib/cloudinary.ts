@@ -48,7 +48,6 @@ export const uploadToCloudinary = async (imageUri: string): Promise<string> => {
 
     // Optional: Add tags for better organization
     formData.append('tags', 'framez,post,mobile');
-    console.log('Uploading to Cloudinary with formData:', formData);
 
     // Upload to Cloudinary
     const response = await fetch(CLOUDINARY_UPLOAD_URL, {
