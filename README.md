@@ -2,7 +2,7 @@
 HNG Internship Frontend Track Stage 4 Task
 
 ## Video Demo
-<video style="height:300px; width:300px;" src="https://github.com/user-attachments/assets/9acef908-4230-4fdd-9e38-1da1c7665c5a"></video>
+<video style="height:300px; width:300px;" src="https://github.com/user-attachments/assets/880a903a-6ba5-46f1-90a6-a02c4995ec41"></video>
 
 
 # Framez - Social Mobile Application 📱
