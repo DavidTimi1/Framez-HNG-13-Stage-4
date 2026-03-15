@@ -193,36 +193,6 @@ Root Navigator (Stack)
 - `TabNavigator.tsx` - Bottom tab navigator with frosted glass effect
 - `types.ts` - TypeScript definitions for all navigation params
 
-### State Management
-
-**Zustand Store** (`authStore.ts`):
-```typescript
-{
-  user: User | null,
-  token: string | null,
-  isAuthenticated: boolean,
-  setUser: (user, token) => void,
-  logout: () => void
-}
-```
-
-Persisted to AsyncStorage for session persistence, ensuring the user remains logged in across app restarts.
-
-### Theme System
-
-All colors are centrally defined in `src/theme/colors.ts`:
-
-```typescript
-THEME = {
-  primary: '#E1306C',      // Instagram pink
-  secondary: '#405DE6',    // Royal blue
-  tertiary: '#5851DB',     // Purple
-  background: '#000000',   // Black
-  surface: '#1A1A1A',      // Dark gray
-  text: '#FFFFFF',         // White
-  textSecondary: '#A0A0A0' // Gray
-}
-```
 
 ## 🎨 Design Features
 
@@ -245,20 +215,6 @@ THEME = {
 - Loading states for all async operations
 - Form validation with helpful error messages
 - **Custom fonts and icons** for a unique and modern design
-
-### Functions
-
-**Authentication:**
-- `auth.register(email, name, password)` - Create new account
-- `auth.login(email, password)` - Login user
-- `auth.getCurrentUser(userId)` - Get user details
-
-**Posts:**
-- `posts.createPost(...)` - Create new post
-- `posts.getAllPosts(limit)` - Get all posts (paginated)
-- `posts.getUserPosts(userId)` - Get user's posts
-- `posts.toggleLike(postId, userId)` - Like/unlike post
-- `posts.repost(postId, userId)` - Repost an existing post, storing the original post and noting the reposting user
 
 ### Extending the API
 
@@ -341,7 +297,7 @@ Contributions are welcome! Feel free to:
 
 ## 📄 License
 
-MIT License - feel free to use this project for learning or commercial purposes.
+[MIT License](LICENSE.md)
 
 ---
 
