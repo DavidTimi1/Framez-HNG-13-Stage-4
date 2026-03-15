@@ -193,18 +193,6 @@ Root Navigator (Stack)
 - `TabNavigator.tsx` - Bottom tab navigator with frosted glass effect
 - `types.ts` - TypeScript definitions for all navigation params
 
-### Component Architecture
-
-**Reusable Components:**
-- `Button.tsx` - 3 variants (primary, secondary, outline) with loading states
-- `PostCard.tsx` - Instagram-style post display with like/comment/repost actions
-
-**Screens:**
-- `AuthScreen.tsx` - Login/Register with validation
-- `HomeFeed.tsx` - Real-time feed with pull-to-refresh and seamless animations
-- `CreatePost.tsx` - Post creation with image upload
-- `ProfileScreen.tsx` - User profile with stats, posts, and repost functionality
-
 ### State Management
 
 **Zustand Store** (`authStore.ts`):
@@ -257,33 +245,6 @@ THEME = {
 - Loading states for all async operations
 - Form validation with helpful error messages
 - **Custom fonts and icons** for a unique and modern design
-
-## 🔧 Convex Backend
-
-### Schema (`convex/schema.ts`)
-
-**Users Table:**
-```typescript
-{
-  email: string,
-  name: string,
-  avatar?: string,
-  passwordHash: string,
-  createdAt: number
-}
-```
-
-**Posts Table:**
-```typescript
-{
-  userId: Id<"users">,
-  userName: string,
-  content: string,
-  imageUrl?: string,
-  timestamp: number,
-  likes: Id<"users">[]  // Array of user IDs
-}
-```
 
 ### Functions
 
@@ -359,93 +320,7 @@ eas build --platform ios --profile preview
    - **Device**: Pixel 4 or similar
    - **OS Version**: Android 12+
 6. Copy your public link: `https://appetize.io/app/xxxxx`
-
-## 🎥 Demo Video Guide
-
-### Script (2-3 minutes)
-
-**0:00-0:20 - Introduction**
-- Show app splash screen
-- "Welcome to Framez - a social media app for sharing moments"
-- Navigate to login screen
-
-**0:20-0:40 - Authentication**
-- Click "Sign Up"
-- Fill in name, email, password
-- Show form validation
-- Successfully register and auto-login
-
-**0:40-1:10 - Home Feed**
-- Scroll through existing posts
-- Tap heart to like a post (show animation)
-- Point out timestamps and user avatars
-- Pull down to refresh feed
-
-**1:10-1:50 - Create Post**
-- Tap "Create" tab in bottom navigation
-- Type post content: "Beautiful sunset at the beach! 🌅"
-- Tap "Add Photo" button
-- Select image from gallery
-- Show Cloudinary upload progress
-- Tap "Share Post"
-- Navigate back to Home to see new post at top
-
-**1:50-2:20 - Profile**
-- Tap "Profile" tab
-- Show user stats (posts count, total likes)
-- Scroll through personal posts
-- Demonstrate consistent UI across all screens
-
-**2:20-2:45 - Session Persistence**
-- Go to phone home screen
-- Force close Expo Go app completely
-- Reopen app
-- Show user is still logged in (no login screen)
-- Navigate through app to prove session persisted
-
-**2:45-3:00 - Closing**
-- Quick recap of features
-- Show GitHub repository
-- Display Appetize.io link
-- "Thanks for watching!"
-
-### Recording Tips
-
-- Use screen recording with device frame
-- Add captions for key actions
-- Keep transitions smooth
-- Show loading states and animations
-- Include both successful flows and edge cases
-- Use a consistent test account
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**"Cannot find module 'convex'"**
-```bash
-npm install convex
-npx convex dev
-```
-
-**Navigation types not found**
-```bash
-npm install @react-navigation/native @react-navigation/native-stack @react-navigation/bottom-tabs
-```
-
-**Images not uploading**
-- Check Cloudinary credentials in `.env`
-- Ensure upload preset is set to "unsigned"
-- Verify internet connection
-
-**App crashes on startup**
-- Check `EXPO_PUBLIC_CONVEX_URL` is set correctly
-- Ensure `npx convex dev` is running
-- Clear Expo cache: `npx expo start -c`
-
-**Bottom tab bar not showing**
-- Check `tabBarStyle` in `TabNavigator.tsx`
-- Ensure `paddingBottom` accounts for device safe area
+ 
 
 ## 📚 Additional Resources
 
@@ -467,20 +342,6 @@ Contributions are welcome! Feel free to:
 ## 📄 License
 
 MIT License - feel free to use this project for learning or commercial purposes.
-
-## 👤 Author
-
-**Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your Name](https://linkedin.com/in/yourprofile)
-
-## 🙏 Acknowledgments
-
-- Instagram for UI/UX inspiration
-- Expo team for amazing developer tools
-- Convex for real-time backend infrastructure
-- React Navigation for routing solution
-- Cloudinary for image hosting
 
 ---
 
